@@ -5,7 +5,7 @@ import json
 import os
 
 class IOManager: ## Manages reading and writing data to files.
-    def __init__(self, file, start=True, jtype=True, binary=False):
+    def __init__(self, file, start=True, jtype=True, binary=False, old=False):
         '''
         file:
             type, string
@@ -25,12 +25,18 @@ class IOManager: ## Manages reading and writing data to files.
             type, boolean
             default, False
             Open file in binary read/write mode
+        old:
+            -- OPTIONAL --
+            type, boolean
+            default, False
+            Use old read/write operation manager
         '''
 
         self.Ops = [] # Operations
         self.Out = {} # Outputs
         self.Reserved = [] # Reserved keys for operations
 
+        self.useOldOpManager = old
         self.stopthread = False # Should stop operations thread
         self.stopped = True # Is operations thread stopped
         self.thread = None # Operation thread object
@@ -119,7 +125,10 @@ class IOManager: ## Manages reading and writing data to files.
             self.stopthread = False # Reset stopthread to avoid immediate stoppage
 
             # Create thread and start
-            self.thread = threading.Thread(target=self.ThreadFunc)
+            if self.useOldOpManager:
+                self.thread = threading.Thread(target=self.oThreadFunc)
+            else:
+                self.thread = threading.Thread(target=self.ThreadFunc)
             self.thread.start()
 
     def Stop(self): # Stop operations thread
@@ -130,7 +139,80 @@ class IOManager: ## Manages reading and writing data to files.
     def isStopped(self): # Test if operations thread not running
         return self.stopped
 
-    def ThreadFunc(self): # Operations function
+    def doOperation(self, file, Next):
+        id = Next["id"] # Operation ID
+
+        if Next["type"] == "r": # If is read operation
+
+            # Use json.load if in json mode
+            if self.jtype:
+                d = json.load(file)
+            else:
+                d = file.read()
+
+            # Put data in output
+            self.Out[id] = {"data": d, "id": id}
+
+            if Next["wfw"]: # Test if read operation is wait-for-write
+                 # Wait for write loop
+                while not self.stopthread: # Test for stop attr
+
+                    # Search for write operation with same id
+                    op = None
+                    for op in self.Ops:
+                        if op["id"] == id:
+                            break
+
+                    # If no write operation, wait and restart loop
+                    if op == None:
+                        time.sleep(.1)
+                        return
+
+                    self.Reserved.remove(id) # Remove reserved id
+                    self.Ops.remove(op) # Remove write operation from list
+                    self.Ops.insert(0, op) # Place write operation first
+                    return
+
+        elif Next["type"] == "w": # If is write operation
+
+            # Use json.dump if in json mode
+            if self.jtype:
+                json.dump(Next["d"], file, indent=4)
+            else:
+                file.write(Next["d"])
+
+    def ThreadFunc(self): # Operations Function
+        self.stopped = False # Reset stopped attribute
+
+        # File attributes
+        if self.binary:
+            t = "b"
+        else:
+            t = ""
+
+        lOp = "" # Last operation type
+        oFile = None # Opened File
+
+        # Operation Loop
+        while not self.stopthread: # While thread not being told to halt
+            # Get next operation
+            if len(self.Ops) > 0: # If there is an operation queued
+                # Get next operation
+                Next = self.Ops[0]
+                del self.Ops[0]
+
+                if Next["type"] == lOp: # If operation is same type as last operation
+                    oFile.seek(0) # Seek to start of file
+                    self.doOperation(oFile, Next) # Do the operation
+                else:
+                    lOp = Next["type"]
+                    if not oFile == None: oFile.close()
+                    oFile = open(self.file, lOp+t) # Open file
+                    self.doOperation(oFile, Next) # Do the operation
+            else:
+                time.sleep(.1)
+
+    def oThreadFunc(self): # Old Operations function
         self.stopped = False # Reset stopped attr
 
         # Read/write type, binary or not
