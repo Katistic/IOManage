@@ -58,9 +58,9 @@ class IOManager: ## Manages reading and writing data to files.
                     file.write("{}")
 
         if start: # start if kwarg start is True
-            self.Start()
+            self.start()
 
-    def getId(self): # Class to get a probably unique key
+    def getId(self): # Get a probably unique key
         return uuid.uuid4()
 
     def read(self, waitforwrite=False, id=None): # Handles creating read operations
@@ -128,7 +128,7 @@ class IOManager: ## Manages reading and writing data to files.
             if self.useOldOpManager:
                 self.thread = threading.Thread(target=self.oThreadFunc)
             else:
-                self.thread = threading.Thread(target=self.ThreadFunc)
+                self.thread = threading.Thread(target=self.threadFunc)
             self.thread.start()
 
     def stop(self): # Stop operations thread
