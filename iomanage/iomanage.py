@@ -212,6 +212,8 @@ class IOManager: ## Manages reading and writing data to files.
             else:
                 time.sleep(.1)
 
+        self.stopped = True # Set operation thread as stopped
+
     def oThreadFunc(self): # Old Operations function
         self.stopped = False # Reset stopped attr
 
