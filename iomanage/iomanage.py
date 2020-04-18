@@ -60,10 +60,10 @@ class IOManager: ## Manages reading and writing data to files.
         if start: # start if kwarg start is True
             self.Start()
 
-    def GetId(self): # Class to get a probably unique key
+    def getId(self): # Class to get a probably unique key
         return uuid.uuid4()
 
-    def Read(self, waitforwrite=False, id=None): # Handles creating read operations
+    def read(self, waitforwrite=False, id=None): # Handles creating read operations
         '''
         waitforwrite:
             -- OPTIONAL --
@@ -106,7 +106,7 @@ class IOManager: ## Manages reading and writing data to files.
         del self.Out[id] # Delete results from output
         return result["data"] # return results
 
-    def Write(self, nd, id=None):
+    def write(self, nd, id=None):
         '''
         nd:
             type, string/bytes
@@ -120,7 +120,7 @@ class IOManager: ## Manages reading and writing data to files.
 
         self.Ops.append({"type": "w", "d": nd, "id": id}) # Add write operation to list
 
-    def Start(self): # Start operations thread
+    def start(self): # Start operations thread
         if self.stopped: # Start only if thread not running
             self.stopthread = False # Reset stopthread to avoid immediate stoppage
 
@@ -131,7 +131,7 @@ class IOManager: ## Manages reading and writing data to files.
                 self.thread = threading.Thread(target=self.ThreadFunc)
             self.thread.start()
 
-    def Stop(self): # Stop operations thread
+    def stop(self): # Stop operations thread
         if not self.stopthread: # Stop thread only if not already stopping
             if not self.stopped: # Stop thread only if thread running
                 self.stopthread = True
@@ -181,7 +181,7 @@ class IOManager: ## Manages reading and writing data to files.
             else:
                 file.write(Next["d"])
 
-    def ThreadFunc(self): # Operations Function
+    def threadFunc(self): # Operations Function
         self.stopped = False # Reset stopped attribute
 
         # File attributes
