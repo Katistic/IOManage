@@ -125,3 +125,5 @@ dmypy.json
 .pyre/
 publish.cmd
 test.py
+config.json
+test.json
