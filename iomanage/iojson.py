@@ -176,16 +176,15 @@ class IOList(IODict):
                 secondlast = c
                 c = tfile.read(1)
 
-                if c in "[{": brackets += 1
-                elif c in "]}":
-                    brackets -= 1
-                    if secondlast == ",": length -= 1
-
                 if c == "\"":
                     inquotes = not inquotes
 
-                if not inquotes and brackets == 1 and c == ",":
-                    length += 1
+                if not inquotes:
+                    if brackets == 1 and c == ",": length += 1
+                    elif c in "[{": brackets += 1
+                    elif c in "]}":
+                        brackets -= 1
+                        if secondlast == ",": length -= 1
 
             return length
 
