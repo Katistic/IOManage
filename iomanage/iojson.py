@@ -107,42 +107,22 @@ class IOList(IODict):
         with open(self.file, "r") as tfile:
             tfile.seek(self.sbyte)
 
-            currentindex = 0
-            data = ""
-            datacomplete = False
-            maxindex = -1
-            brackets = 0
-
-            inquotes = False
-            secondlast = ""
-            c = ""
-
-            # Get list length
-            while not (c == "]" and brackets == 0):
-                secondlast = c
-                c = tfile.read(1)
-
-                if c in "[{": brackets += 1
-                elif c in "]}":
-                    brackets -= 1
-                    if secondlast == ",": maxindex -= 1
-
-                if c == "\"":
-                    inquotes = not inquotes
-
-                if not inquotes and brackets == 1 and c == ",":
-                    maxindex += 1
-
             # Out of range errors
+            maxindex = len(self) - 1
+
             if maxindex == -1: raise IndexError("IOList index out of range")
             elif key < 0 and key * - 1 - 1 > maxindex: raise IndexError("IOList index out of range")
             elif key > 0 and key > maxindex: raise IndexError("IOList index out of range")
 
             # Get data
+            currentindex = 0
+            data = ""
+            datacomplete = False
             brackets = 0
-            c = ""
-            secondlast = ""
+
             inquotes = False
+            secondlast = ""
+            c = ""
 
             if key < 0: key = maxindex - (key * - 1 - 1)
 
@@ -181,6 +161,33 @@ class IOList(IODict):
 
     def __next__(self):
         pass
+
+    def __len__(self):
+        with open(self.file, "r") as tfile:
+            tfile.seek(self.sbyte)
+
+            c = ""
+            secondlast = ""
+            inquotes = False
+            brackets = 0
+            length = 0
+
+            while not (c == "]" and brackets == 0):
+                secondlast = c
+                c = tfile.read(1)
+
+                if c in "[{": brackets += 1
+                elif c in "]}":
+                    brackets -= 1
+                    if secondlast == ",": length -= 1
+
+                if c == "\"":
+                    inquotes = not inquotes
+
+                if not inquotes and brackets == 1 and c == ",":
+                    length += 1
+
+            return length
 
 class IOJson(IODict):
     def __init__(self, file):
