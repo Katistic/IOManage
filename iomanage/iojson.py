@@ -104,89 +104,76 @@ class IOList(IODict):
     def __getitem__(self, key):
         if type(key) != int: raise TypeError("IOList indices must be integers, not " + str(type(key)))
 
+        size = len(self) - 1
+
+        if size == -1: raise IndexError("IOList index out of range")
+        elif key < 0 and key * - 1 - 1 > size: raise IndexError("IOList index out of range")
+        elif key > 0 and key > size: raise IndexError("IOList index out of range")
+
+        index = -1
+
+        for item in self:
+            index += 1
+            if index == key: return item
+
+    def __iter__(self):
+        self.lbyte = self.sbyte
+        self.lfinish = False
+        return self
+
+    def __next__(self):
+        if self.lfinish:
+            self.lfinish = False
+            raise StopIteration
+
         with open(self.file, "r") as tfile:
-            tfile.seek(self.sbyte)
+            tfile.seek(self.lbyte)
 
-            # Out of range errors
-            maxindex = len(self) - 1
-
-            if maxindex == -1: raise IndexError("IOList index out of range")
-            elif key < 0 and key * - 1 - 1 > maxindex: raise IndexError("IOList index out of range")
-            elif key > 0 and key > maxindex: raise IndexError("IOList index out of range")
-
-            # Get data
-            currentindex = 0
-            data = ""
-            datacomplete = False
+            c = tfile.read(1)
+            secondlast = ""
+            inquotes = False
             brackets = 0
 
-            inquotes = False
-            secondlast = ""
-            c = ""
+            data = ""
+            datacomplete = False
 
-            if key < 0: key = maxindex - (key * - 1 - 1)
-
-            tfile.seek(self.sbyte)
-            tfile.read(1)
-
-            while not (currentindex == key and datacomplete):
+            while not datacomplete:
                 secondlast = c
                 c = tfile.read(1)
+                self.lbyte = tfile.tell() - 1
 
-                if currentindex == key: # Correct index
-                    if data == "" and not inquotes:
-                        if c == "{": return IODict(tfile.tell() - 1, self.parent)
-                        elif c == "[": return IOList(tfile.tell() - 1, self.parent)
+                if data == "" and not inquotes:
+                    if c == "{": return IODict(tfile.tell() - 1, self.parent)
+                    elif c == "[": return IOList(tfile.tell() - 1, self.parent)
 
-                    if c == "\"" and secondlast != "\\":
-                        inquotes = not inquotes
-                    if not inquotes:
-                        if c == " ": continue
-                        elif c == ",":
-                            datacomplete = True
-                            continue
+                if c == "\"" and secondlast != "\\": inquotes = not inquotes
+                if not inquotes:
+                    if c == " ": continue
+                    elif c == ",":
+                        datacomplete = True
+                        continue
+                    elif c == "]":
+                        self.lfinish = True
+                        datacomplete = True
+                        continue
 
-                    data += c
-                else: # Not correct index
-                    if c in "{[": brackets += 1
-                    elif c in "}]": brackets -= 1
-                    elif c == "\"" and secondlast != "\\": inquotes = not inquotes
-                    elif c == "," and not inquotes: currentindex += 1
+                data += c
 
             return self._encoding(data)
 
-
-    def __iter__(self):
-        pass
-
-    def __next__(self):
-        pass
-
     def __len__(self):
-        with open(self.file, "r") as tfile:
-            tfile.seek(self.sbyte)
+        length = 0
 
-            c = ""
-            secondlast = ""
-            inquotes = False
-            brackets = 0
-            length = 0
+        for item in self:
+            length += 1
 
-            while not (c == "]" and brackets == 0):
-                secondlast = c
-                c = tfile.read(1)
+        return length
 
-                if c == "\"":
-                    inquotes = not inquotes
+    def __init__(self, sbyte, parent=None, file=None):
+        super().__init__(sbyte, parent, file)
 
-                if not inquotes:
-                    if brackets == 1 and c == ",": length += 1
-                    elif c in "[{": brackets += 1
-                    elif c in "]}":
-                        brackets -= 1
-                        if secondlast == ",": length -= 1
-
-            return length
+        self.lbyte = self.sbyte
+        self.lfinish = False
 
 class IOJson(IODict):
     def __init__(self, file):

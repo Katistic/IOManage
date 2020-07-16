@@ -23,5 +23,6 @@ Currently also working on classes to read and write from/to massive JSON files
 + Lists read from JSON are IOList objects
 + Each IOList, IODict, and IOJson class has only 1 key and/or value stored in memory at one time
 - Can not detect malformed JSON, instead will (probably) break
-- Can not (yet) iterate through IOList, IODict, and IOJson classes
+- Can not (yet) iterate through IODict, and IOJson classes
+- NOT THREADSAFE!
 ```
