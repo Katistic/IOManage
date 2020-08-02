@@ -6,7 +6,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="iomanage",
-    version="1.0.4",
+    version="1.0.5",
     description="Manages IO operations of a single file",
     long_description=README,
     long_description_content_type="text/markdown",
