@@ -118,7 +118,14 @@ class IOManager: ## Manages reading and writing data to files.
             ID to identify this operation
         '''
 
+        if id == None: id = uuid.uuid4() # Get ID if none given
         self.Ops.append({"type": "w", "d": nd, "id": id}) # Add write operation to list
+
+        while not id in self.Out: # Wait for operation to finish
+            time.sleep(0.01)
+
+        del self.Out[id] # Remove operation data
+        return
 
     def start(self): # Start operations thread
         if self.stopped: # Start only if thread not running
@@ -180,6 +187,9 @@ class IOManager: ## Manages reading and writing data to files.
                 json.dump(Next["d"], file, indent=4)
             else:
                 file.write(Next["d"])
+
+            # Put data in output
+            self.Out[id] = {"id": id}
 
     def threadFunc(self): # Operations Function
         self.stopped = False # Reset stopped attribute
@@ -275,6 +285,8 @@ class IOManager: ## Manages reading and writing data to files.
                             json.dump(Next["d"], file, indent=4)
                         else:
                             file.write(Next["d"])
+
+                        self.Out[id] = {"id": id}
 
             else: # If no operations, wait.
                 time.sleep(.1)
