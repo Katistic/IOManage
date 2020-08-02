@@ -109,7 +109,7 @@ class IOManager: ## Manages reading and writing data to files.
     def write(self, nd, id=None):
         '''
         nd:
-            type, string/bytes
+            type, dictionary
             New data to write to file
         id:
             -- OPTIONAL --
