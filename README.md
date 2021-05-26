@@ -6,8 +6,6 @@
 The only scenario I made this library for is when reading and
 writing from a single file in more than a single thread.
 
-Currently also working on classes to read and write from/to massive JSON files
-
 ## Features
 
 ```diff
