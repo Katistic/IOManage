@@ -1,4 +1,5 @@
 import threading
+import asyncio
 import uuid
 import enum
 import time
@@ -32,6 +33,10 @@ class Operation:
     def wait_for_finish(self):
         while not self.finished:
             time.sleep(0)
+            
+    async def wait_for_finish_a(self):
+        while not self.finished:
+            await asyncio.sleep(0)
 
     @property
     def result(self):
